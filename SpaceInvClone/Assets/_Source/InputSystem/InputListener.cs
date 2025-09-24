@@ -1,3 +1,4 @@
+using System;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -5,8 +6,9 @@ using UnityEngine.InputSystem;
 public class InputListener : MonoBehaviour
 {
     private InputSystem _inputActions;
+    private InputAction _movement;
 
-    private float _verticalMove;
+    private float _verticalMoveF;
 
     private Invoker _invoker;
 
@@ -23,14 +25,33 @@ public class InputListener : MonoBehaviour
 
     private void Bind()
     {
-        InputAction verticalMoveAction = _inputActions.Player.VerticalMove;
+        _movement = _inputActions.Player.VerticalMove;
+        _movement.Enable();
 
-        _verticalMove = verticalMoveAction.ReadValue<float>();
-        verticalMoveAction.Enable();
+        InputAction playerAttack = _inputActions.Player.Attack;
+        playerAttack.performed += Shoot;
+        playerAttack.Enable();
+    }
+
+    private void Shoot(InputAction.CallbackContext context)
+    {
+        _invoker.InvokeShoot();
     }
 
     private void Update()
     {
-        _invoker.InvokeMove(_verticalMove);
+        Movement();
+    }
+
+    private void Movement()
+    {
+        _verticalMoveF = _movement.ReadValue<float>();
+        _invoker.InvokeMove(_verticalMoveF);
+    }
+
+    private void OnDisable()
+    {
+        _inputActions.Player.VerticalMove.Disable();
+        _inputActions.Player.Attack.Disable();
     }
 }
